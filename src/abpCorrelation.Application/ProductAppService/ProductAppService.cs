@@ -13,6 +13,7 @@ using abpCorrelation.Application.Contracts.ProductAppService;
 using abpCorrelation.Application.Contracts.ProductAppService.Dtos;
 using abpCorrelation.Domain.Products;
 using abpCorrelation.Domain.Correlation;
+using abpCorrelation.Application.Contracts.Correlation;
 
 namespace abpCorrelation.Application.ProductAppService;
 
@@ -22,20 +23,20 @@ namespace abpCorrelation.Application.ProductAppService;
 public class ProductAppService : ApplicationService, IProductAppService
 {
     private readonly IRepository<Product, Guid> _productRepository;
-    private readonly ICorrelationLogRepository _correlationLogRepository;
+    private readonly ICorrelationLogAppService _correlationLogAppService;
     private readonly ILogger<ProductAppService> _logger;
     private readonly IAsyncQueryableExecuter _asyncExecuter;
     private readonly ICorrelationIdProvider _correlationIdProvider;
 
     public ProductAppService(
         IRepository<Product, Guid> productRepository,
-        ICorrelationLogRepository correlationLogRepository,
+        ICorrelationLogAppService correlationLogAppService,
         ILogger<ProductAppService> logger,
         IAsyncQueryableExecuter asyncExecuter,
         ICorrelationIdProvider correlationIdProvider)
     {
         _productRepository = productRepository;
-        _correlationLogRepository = correlationLogRepository;
+        _correlationLogAppService = correlationLogAppService;
         _logger = logger;
         _asyncExecuter = asyncExecuter;
         _correlationIdProvider = correlationIdProvider;
@@ -405,18 +406,18 @@ public class ProductAppService : ApplicationService, IProductAppService
     /// Helper method to log correlation information with proper correlation ID tracking
     /// </summary>
     private async Task LogCorrelationAsync(
-        string correlationId, 
-        string operation, 
-        string details, 
-        Guid? entityId = null, 
-        double duration = 0, 
-        bool isSuccess = true, 
-        string? errorMessage = null, 
+        string correlationId,
+        string operation,
+        string details,
+        Guid? entityId = null,
+        double duration = 0,
+        bool isSuccess = true,
+        string? errorMessage = null,
         int? recordCount = null)
     {
         try
         {
-            var correlationLog = new CorrelationLog
+            var logDto = new CreateCorrelationLogDto
             {
                 CorrelationId = correlationId,
                 OperationType = "PRODUCT_OPERATION",
@@ -428,17 +429,15 @@ public class ProductAppService : ApplicationService, IProductAppService
                 IsSuccess = isSuccess,
                 ErrorMessage = errorMessage,
                 ApplicationName = "abpCorrelation",
-                Environment = "Development" // You can get this from configuration
+                Environment = "Development"
             };
-
-            await _correlationLogRepository.InsertAsync(correlationLog);
-            
-            _logger.LogInformation("Correlation logged: {CorrelationId} - {Operation} - {Details}", 
+            await _correlationLogAppService.CreateAsync(logDto);
+            _logger.LogInformation("Correlation logged: {CorrelationId} - {Operation} - {Details}",
                 correlationId, operation, details);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to log correlation information for operation: {Operation} with correlation: {CorrelationId}", 
+            _logger.LogWarning(ex, "Failed to log correlation information for operation: {Operation} with correlation: {CorrelationId}",
                 operation, correlationId);
         }
     }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using abpCorrelation.EntityFrameworkCore;
 namespace abpCorrelation.Migrations
 {
     [DbContext(typeof(abpCorrelationDbContext))]
-    partial class abpCorrelationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250626105724_addedProducttable")]
+    partial class addedProducttable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1951,164 +1954,6 @@ namespace abpCorrelation.Migrations
                         .HasDatabaseName("IX_CorrelationLogs_UserId_CreationTime");
 
                     b.ToTable("CorrelationLogs", (string)null);
-                });
-
-            modelBuilder.Entity("abpCorrelation.Domain.Products.Product", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Barcode")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Brand")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Category")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Color")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
-                        .HasColumnName("ConcurrencyStamp");
-
-                    b.Property<decimal>("Cost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("CountryOfOrigin")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("CreationTime");
-
-                    b.Property<Guid?>("CreatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("CreatorId");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Dimensions")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ExpiryDate")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("ExtraProperties")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("ExtraProperties");
-
-                    b.Property<string>("Images")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsFeatured")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("LastModificationTime");
-
-                    b.Property<Guid?>("LastModifierId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("LastModifierId");
-
-                    b.Property<DateTime?>("LaunchDate")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Manufacturer")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Material")
-                        .HasColumnType("text");
-
-                    b.Property<int>("MaxStockLevel")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("MetaData")
-                        .HasColumnType("text");
-
-                    b.Property<int>("MinStockLevel")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int>("PopularityScore")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Rating")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("ReviewCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SeoDescription")
-                        .HasColumnType("text");
-
-                    b.Property<string>("SeoKeywords")
-                        .HasColumnType("text");
-
-                    b.Property<string>("SeoTitle")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ShippingClass")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Size")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Sku")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("Specifications")
-                        .HasColumnType("text");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("StockQuantity")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Tags")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("TaxClass")
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("TenantId");
-
-                    b.Property<string>("Warranty")
-                        .HasColumnType("text");
-
-                    b.Property<decimal?>("Weight")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLogAction", b =>

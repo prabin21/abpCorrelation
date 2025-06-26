@@ -104,6 +104,15 @@ public class abpCorrelationWebModule : AbpModule
         ConfigureNavigationServices();
         ConfigureAutoApiControllers();
         ConfigureSwaggerServices(context.Services);
+
+        // Disable antiforgery validation for APIs in development
+        if (hostingEnvironment.IsDevelopment())
+        {
+            Configure<Volo.Abp.AspNetCore.Mvc.AntiForgery.AbpAntiForgeryOptions>(options =>
+            {
+                options.AutoValidate = false;
+            });
+        }
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)

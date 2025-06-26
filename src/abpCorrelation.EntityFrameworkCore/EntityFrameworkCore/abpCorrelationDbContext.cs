@@ -14,6 +14,8 @@ using Volo.Abp.TenantManagement;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
 using abpCorrelation.Domain.Correlation;
 using abpCorrelation.EntityFrameworkCore.Correlation;
+using abpCorrelation.Domain.Products;
+using abpCorrelation.EntityFrameworkCore.Products;
 
 namespace abpCorrelation.EntityFrameworkCore;
 
@@ -61,6 +63,12 @@ public class abpCorrelationDbContext :
 
     #endregion
 
+    #region Products
+
+    public DbSet<Product> Products { get; set; }
+
+    #endregion
+
     public abpCorrelationDbContext(DbContextOptions<abpCorrelationDbContext> options)
         : base(options)
     {
@@ -86,5 +94,7 @@ public class abpCorrelationDbContext :
 
         // Configure CorrelationLog
         builder.ApplyConfiguration(new CorrelationLogConfiguration());
+        // Configure Product
+        builder.ApplyConfiguration(new ProductConfiguration());
     }
 }
