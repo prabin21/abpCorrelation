@@ -35,6 +35,14 @@ public class Program
             await builder.AddApplicationAsync<abpCorrelationWebModule>();
             var app = builder.Build();
             await app.InitializeApplicationAsync();
+
+            // Redirect root URL to Swagger UI
+            app.MapGet("/", context =>
+            {
+                context.Response.Redirect("/swagger");
+                return Task.CompletedTask;
+            });
+
             await app.RunAsync();
             return 0;
         }
