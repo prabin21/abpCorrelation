@@ -12,6 +12,8 @@ using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.TenantManagement;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
+using abpCorrelation.Domain.Correlation;
+using abpCorrelation.EntityFrameworkCore.Correlation;
 
 namespace abpCorrelation.EntityFrameworkCore;
 
@@ -53,6 +55,12 @@ public class abpCorrelationDbContext :
 
     #endregion
 
+    #region Correlation Logs
+
+    public DbSet<CorrelationLog> CorrelationLogs { get; set; }
+
+    #endregion
+
     public abpCorrelationDbContext(DbContextOptions<abpCorrelationDbContext> options)
         : base(options)
     {
@@ -76,11 +84,7 @@ public class abpCorrelationDbContext :
 
         /* Configure your own tables/entities inside here */
 
-        //builder.Entity<YourEntity>(b =>
-        //{
-        //    b.ToTable(abpCorrelationConsts.DbTablePrefix + "YourEntities", abpCorrelationConsts.DbSchema);
-        //    b.ConfigureByConvention(); //auto configure for the base class props
-        //    //...
-        //});
+        // Configure CorrelationLog
+        builder.ApplyConfiguration(new CorrelationLogConfiguration());
     }
 }
