@@ -1,45 +1,60 @@
 using System;
 using System.IO;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using abpCorrelation.EntityFrameworkCore;
 using abpCorrelation.Localization;
 using abpCorrelation.MultiTenancy;
 using abpCorrelation.Web.Menus;
-using Microsoft.OpenApi.Models;
-using OpenIddict.Validation.AspNetCore;
 using Volo.Abp;
-using Volo.Abp.Account.Web;
+using Volo.Abp.Account;
+using Volo.Abp.Account.Public.Web;
+using Volo.Abp.Account.Public.Web.Impersonation;
 using Volo.Abp.AspNetCore.Mvc;
-using Volo.Abp.AspNetCore.Mvc.Localization;
-using Volo.Abp.AspNetCore.Mvc.UI;
-using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
-using Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
 using Volo.Abp.AspNetCore.Serilog;
+using Volo.Abp.AuditLogging.Web;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
-using Volo.Abp.FeatureManagement;
+using Volo.Abp.Identity;
 using Volo.Abp.Identity.Web;
+using Volo.Abp.Identity.Web.Navigation;
+using Volo.Abp.IdentityServer.EntityFrameworkCore;
+using Volo.Abp.LanguageManagement;
+using Volo.Abp.LanguageManagement.Web.Navigation;
+using Volo.Abp.LeptonXLite.Theme.Navigation;
 using Volo.Abp.Localization;
+using Volo.Abp.Localization.ExceptionHandling;
 using Volo.Abp.Modularity;
-using Volo.Abp.PermissionManagement.Web;
-using Volo.Abp.Security.Claims;
-using Volo.Abp.SettingManagement.Web;
-using Volo.Abp.Swashbuckle;
-using Volo.Abp.TenantManagement.Web;
+using Volo.Abp.MultiTenancy;
+using Volo.Abp.Navigation;
 using Volo.Abp.OpenIddict;
-using Volo.Abp.UI.Navigation.Urls;
-using Volo.Abp.UI;
+using Volo.Abp.OpenIddict.EntityFrameworkCore;
+using Volo.Abp.OpenIddict.Pro.ServerSideSession;
+using Volo.Abp.PermissionManagement;
+using Volo.Abp.PermissionManagement.Web.Navigation;
+using Volo.Abp.SettingManagement;
+using Volo.Abp.SettingManagement.Web.Navigation;
+using Volo.Abp.Swashbuckle;
+using Volo.Abp.TenantManagement;
+using Volo.Abp.TenantManagement.Web;
+using Volo.Abp.TenantManagement.Web.Navigation;
 using Volo.Abp.UI.Navigation;
+using Volo.Abp.UI.Navigation.Urls;
+using Volo.Abp.Validation.Localization;
 using Volo.Abp.VirtualFileSystem;
+using abpCorrelation.Correlation;
+using abpCorrelation.HttpApi.Correlation;
+using abpCorrelation.Web.Logging;
 
 namespace abpCorrelation.Web;
 
@@ -112,7 +127,6 @@ public class abpCorrelationWebModule : AbpModule
         ConfigureNavigationServices();
         ConfigureAutoApiControllers();
         ConfigureSwaggerServices(context.Services);
-        ConfigureCorrelationId(context.Services);
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -195,46 +209,6 @@ public class abpCorrelationWebModule : AbpModule
                 options.CustomSchemaIds(type => type.FullName);
             }
         );
-    }
-
-    private void ConfigureCorrelationId(IServiceCollection services)
-    {
-        // Option 2: Enhanced Correlation ID Configuration
-        services.Configure<CorrelationIdOptions>(options =>
-        {
-            // Custom header name (default is "X-Correlation-ID")
-            options.Header = "X-Correlation-ID";
-            
-            // Include correlation ID in response headers
-            options.IncludeInResponse = true;
-            
-            // Custom correlation ID generator
-            options.Generator = () => $"corr-{Guid.NewGuid():N}";
-            
-            // Add additional headers to track
-            options.AddToLoggingScope = true;
-        });
-
-        // Option 3: Register custom correlation ID provider
-        services.AddTransient<ICorrelationIdProvider, CorrelationIdProvider>();
-        
-        // Option 4: Register HTTP message handler for correlation ID propagation
-        services.AddTransient<CorrelationIdHttpMessageHandler>();
-        
-        // Option 5: Register Serilog enricher
-        services.AddTransient<CorrelationIdEnricher>();
-        
-        // Configure HTTP client to use correlation ID handler
-        services.Configure<AbpHttpClientOptions>(options =>
-        {
-            options.HttpClientActions.Add(client =>
-            {
-                // Add the correlation ID handler to HttpClient
-                var handler = services.BuildServiceProvider().GetRequiredService<CorrelationIdHttpMessageHandler>();
-                handler.InnerHandler = new HttpClientHandler();
-                client.Handler = handler;
-            });
-        });
     }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
