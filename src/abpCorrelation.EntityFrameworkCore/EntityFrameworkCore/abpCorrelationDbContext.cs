@@ -69,6 +69,10 @@ public class abpCorrelationDbContext :
 
     #endregion
 
+    #region Orders
+    public DbSet<Order> Orders { get; set; }
+    #endregion
+
     public abpCorrelationDbContext(DbContextOptions<abpCorrelationDbContext> options)
         : base(options)
     {
@@ -96,5 +100,7 @@ public class abpCorrelationDbContext :
         builder.ApplyConfiguration(new CorrelationLogConfiguration());
         // Configure Product
         builder.ApplyConfiguration(new ProductConfiguration());
+        // Configure Order
+        builder.ApplyConfiguration(new OrderConfiguration());
     }
 }
