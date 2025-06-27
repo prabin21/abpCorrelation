@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
+using Microsoft.FeatureManagement;
 
 namespace abpCorrelation.Web;
 
@@ -32,6 +33,7 @@ public class Program
             builder.Host.AddAppSettingsSecretsJson()
                 .UseAutofac()
                 .UseSerilog();
+            builder.Services.AddFeatureManagement();
             await builder.AddApplicationAsync<abpCorrelationWebModule>();
             var app = builder.Build();
             await app.InitializeApplicationAsync();

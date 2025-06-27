@@ -21,7 +21,9 @@
     <PackageReference Include="Volo.Abp.FeatureManagement.Application" Version="9.2.1" />
     <PackageReference Include="Volo.Abp.SettingManagement.Application" Version="9.2.1" />
   </ItemGroup>
-
+	<ItemGroup>
+		<PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="3.0.0" />
+	</ItemGroup>
   <ItemGroup>
     <Folder Include="ProductAppService\" />
   </ItemGroup>

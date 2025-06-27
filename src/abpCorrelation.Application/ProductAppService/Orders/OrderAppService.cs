@@ -12,6 +12,9 @@ using System.Collections.Generic;
 using abpCorrelation.Application.Contracts.ProductAppService;
 using abpCorrelation.Application.Contracts.ProductAppService.Dtos;
 using Microsoft.Extensions.Logging;
+using Volo.Abp;
+using Microsoft.FeatureManagement;
+using Volo.Abp.Uow;
 
 namespace abpCorrelation.Application.ProductAppService.Orders;
 
@@ -22,19 +25,25 @@ public class OrderAppService : ApplicationService, IOrderAppService
     private readonly ICorrelationLogAppService _correlationLogAppService;
     private readonly IProductAppService _productAppService;
     private readonly ILogger<OrderAppService> _logger;
+    private readonly IFeatureManager _featureManager;
+    private readonly IUnitOfWorkManager _unitOfWorkManager;
 
     public OrderAppService(
         IRepository<Order, Guid> orderRepository,
         ICorrelationIdProvider correlationIdProvider,
         ICorrelationLogAppService correlationLogAppService,
         IProductAppService productAppService,
-        ILogger<OrderAppService> logger)
+        ILogger<OrderAppService> logger,
+        IFeatureManager featureManager,
+        IUnitOfWorkManager unitOfWorkManager)
     {
         _orderRepository = orderRepository;
         _correlationIdProvider = correlationIdProvider;
         _correlationLogAppService = correlationLogAppService;
         _productAppService = productAppService;
         _logger = logger;
+        _featureManager = featureManager;
+        _unitOfWorkManager = unitOfWorkManager;
     }
 
     public async Task<OrderDto> CreateAsync(CreateOrderDto input)
@@ -43,6 +52,11 @@ public class OrderAppService : ApplicationService, IOrderAppService
         var startTime = DateTime.UtcNow;
         try
         {
+            if (!await _featureManager.IsEnabledAsync("OrderSubmissionTimeWindow"))
+            {
+                _logger.LogWarning("Order submission attempted outside allowed time window. CorrelationId: {CorrelationId}", correlationId);
+                throw new UserFriendlyException("Order submission is currently disabled. Please try again later.");
+            }
             _logger.LogInformation("Creating order: {OrderNumber}, ProductId: {ProductId}, Quantity: {Quantity}, CorrelationId: {CorrelationId}", input.OrderNumber, input.ProductId, input.Quantity, correlationId);
             // 1. Call ProductAppService to remove stock for the product
             await _productAppService.RemoveStockAsync(new StockOperationDto
@@ -79,19 +93,23 @@ public class OrderAppService : ApplicationService, IOrderAppService
         {
             var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
             _logger.LogError(ex, "Error creating order: {OrderNumber}, ProductId: {ProductId}, CorrelationId: {CorrelationId}", input.OrderNumber, input.ProductId, correlationId);
-            await _correlationLogAppService.CreateAsync(new CreateCorrelationLogDto
+            using (var uow = _unitOfWorkManager.Begin(requiresNew: true))
             {
-                CorrelationId = correlationId,
-                OperationType = "ORDER_OPERATION",
-                OperationName = "CreateOrder",
-                RequestData = $"OrderNumber: {input.OrderNumber}, ProductId: {input.ProductId}, Quantity: {input.Quantity}",
-                ResponseData = ex.Message,
-                DurationMs = (long)duration,
-                Severity = "Error",
-                IsSuccess = false,
-                ApplicationName = "abpCorrelation",
-                Environment = "Development"
-            });
+                await _correlationLogAppService.CreateAsync(new CreateCorrelationLogDto
+                {
+                    CorrelationId = correlationId,
+                    OperationType = "ORDER_OPERATION",
+                    OperationName = "CreateOrder",
+                    RequestData = $"OrderNumber: {input.OrderNumber}, ProductId: {input.ProductId}, Quantity: {input.Quantity}",
+                    ResponseData = ex.Message,
+                    DurationMs = (long)duration,
+                    Severity = "Error",
+                    IsSuccess = false,
+                    ApplicationName = "abpCorrelation",
+                    Environment = "Development"
+                });
+                await uow.CompleteAsync();
+            }
             throw;
         }
     }
